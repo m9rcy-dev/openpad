@@ -1,0 +1,32 @@
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 4px 14px;
+  background: var(--chrome);
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.status-bar-spacer {
+  flex: 1;
+}
+
+.status-bar-saved {
+  color: var(--accent-ink);
+}
+
+.status-bar-success {
+  color: var(--accent-ink);
+}
+
+.status-bar-error {
+  color: var(--danger);
+  background: var(--danger-soft);
+  padding: 0 8px;
+  border-radius: 4px;
+}

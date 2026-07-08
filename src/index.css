@@ -1,0 +1,120 @@
+/*
+ * Global styles and design tokens.
+ *
+ * The palette follows the approved design target (docs/ui-mockup.html):
+ * a chameleon-green accent (a nod to Notepad++) on green-biased neutrals.
+ * Every component styles itself through these custom properties so that
+ * theme switching only ever redefines tokens, never component rules.
+ *
+ * Theme resolution order:
+ *   1. Default (light) tokens on :root
+ *   2. OS preference via prefers-color-scheme
+ *   3. Explicit user choice via data-theme, which must win over the OS
+ */
+
+:root {
+  --bg: #f6f7f5;
+  --surface: #ffffff;
+  --chrome: #eceee9;
+  --chrome-2: #e2e5dd;
+  --ink: #1d221e;
+  --muted: #5c665e;
+  --faint: #8b948c;
+  --accent: #2e8b46;
+  --accent-ink: #1d6b33;
+  --accent-soft: #e3f2e7;
+  --line: #d8dcd4;
+  --editor-bg: #fdfdfc;
+  --gutter: #f0f2ed;
+  --active-line: #f0f6ef;
+  --danger: #a03434;
+  --danger-soft: #fbe7e7;
+
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Cascadia Mono', monospace;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #131714;
+    --surface: #1b201c;
+    --chrome: #20261f;
+    --chrome-2: #262d24;
+    --ink: #e6eae4;
+    --muted: #98a29a;
+    --faint: #6c766e;
+    --accent: #4fbf68;
+    --accent-ink: #6fd486;
+    --accent-soft: #1e3325;
+    --line: #2e352f;
+    --editor-bg: #171c18;
+    --gutter: #1b211c;
+    --active-line: #1e2a20;
+    --danger: #e09a9a;
+    --danger-soft: #3a2323;
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='light'] {
+  --bg: #f6f7f5;
+  --surface: #ffffff;
+  --chrome: #eceee9;
+  --chrome-2: #e2e5dd;
+  --ink: #1d221e;
+  --muted: #5c665e;
+  --faint: #8b948c;
+  --accent: #2e8b46;
+  --accent-ink: #1d6b33;
+  --accent-soft: #e3f2e7;
+  --line: #d8dcd4;
+  --editor-bg: #fdfdfc;
+  --gutter: #f0f2ed;
+  --active-line: #f0f6ef;
+  --danger: #a03434;
+  --danger-soft: #fbe7e7;
+
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --bg: #131714;
+  --surface: #1b201c;
+  --chrome: #20261f;
+  --chrome-2: #262d24;
+  --ink: #e6eae4;
+  --muted: #98a29a;
+  --faint: #6c766e;
+  --accent: #4fbf68;
+  --accent-ink: #6fd486;
+  --accent-soft: #1e3325;
+  --line: #2e352f;
+  --editor-bg: #171c18;
+  --gutter: #1b211c;
+  --active-line: #1e2a20;
+  --danger: #e09a9a;
+  --danger-soft: #3a2323;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}

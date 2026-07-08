@@ -1,0 +1,73 @@
+.compare-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.compare-dialog {
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  max-height: 70vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.25);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.compare-dialog-title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.compare-dialog-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.compare-dialog-item,
+.compare-dialog-file,
+.compare-dialog-cancel {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--editor-bg);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+.compare-dialog-item:hover,
+.compare-dialog-file:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.compare-dialog-cancel {
+  text-align: center;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.compare-dialog-cancel:hover {
+  color: var(--ink);
+  border-color: var(--faint);
+}

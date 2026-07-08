@@ -1,0 +1,41 @@
+/* Application shell: header / editor / status bar in a fixed-height
+   column, where only the editor scrolls. */
+.app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  flex: 1;
+  min-height: 0; /* allow children to shrink inside the flex column */
+  display: flex;
+}
+
+.app-editor {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Split view: editor and preview share the row 55/45. */
+.app-main-split .app-editor {
+  flex: 1.2;
+}
+
+.app-main-split > .preview-pane {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Stack vertically on narrow viewports. */
+@media (max-width: 760px) {
+  .app-main-split {
+    flex-direction: column;
+  }
+
+  .app-main-split > .preview-pane {
+    border-left: none;
+    border-top: 1px solid var(--line);
+  }
+}

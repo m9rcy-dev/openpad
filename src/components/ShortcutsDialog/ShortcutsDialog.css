@@ -1,0 +1,87 @@
+.shortcuts-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.shortcuts-dialog {
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  max-height: 80vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.25);
+  padding: 16px;
+  font-family: var(--font-mono);
+}
+
+.shortcuts-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.shortcuts-dialog-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.shortcuts-dialog-close {
+  border: none;
+  background: transparent;
+  color: var(--faint);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.shortcuts-dialog-close:hover {
+  color: var(--ink);
+}
+
+.shortcuts-dialog-group + .shortcuts-dialog-group {
+  border-top: 1px solid var(--line);
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.shortcuts-dialog-heading {
+  margin: 0 0 6px;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+  font-weight: 400;
+}
+
+.shortcuts-dialog-list {
+  margin: 0;
+}
+
+.shortcuts-dialog-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 0;
+  font-size: 12.5px;
+}
+
+.shortcuts-dialog-row dt {
+  color: var(--ink);
+}
+
+.shortcuts-dialog-row dd {
+  margin: 0;
+  color: var(--muted);
+  white-space: nowrap;
+}

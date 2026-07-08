@@ -1,0 +1,108 @@
+/* Shared styling for menu-bar dropdowns (Tools, File). */
+
+.dropdown-menu-root {
+  position: relative;
+}
+
+.menu-trigger {
+  padding: 3px 9px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.menu-trigger:hover {
+  background: var(--chrome-2);
+}
+
+.menu-trigger:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.menu-trigger-open {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.menu-trigger-open:hover {
+  background: var(--accent);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  min-width: 220px;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  padding: 5px;
+}
+
+.dropdown-menu-group + .dropdown-menu-group {
+  border-top: 1px solid var(--line);
+  margin-top: 5px;
+  padding-top: 5px;
+}
+
+.dropdown-menu-heading {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+  padding: 4px 10px 2px;
+}
+
+.dropdown-menu-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dropdown-menu-item:hover,
+.dropdown-menu-item:focus-visible {
+  background: var(--accent);
+  color: #ffffff;
+  outline: none;
+}
+
+.dropdown-menu-item:disabled {
+  color: var(--faint);
+  cursor: not-allowed;
+}
+
+.dropdown-menu-item:disabled:hover {
+  background: transparent;
+  color: var(--faint);
+}
+
+.dropdown-menu-shortcut {
+  color: var(--faint);
+  font-size: 11px;
+}
+
+.dropdown-menu-item:hover .dropdown-menu-shortcut,
+.dropdown-menu-item:focus-visible .dropdown-menu-shortcut {
+  color: rgba(255, 255, 255, 0.75);
+}
