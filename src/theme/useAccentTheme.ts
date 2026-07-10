@@ -15,9 +15,7 @@ import { useEffect, useState } from 'react'
 import { ACCENT_PRESETS, findAccentPreset, type AccentPresetId } from './accentPresets'
 import { deriveAccentPalette, type AccentPalette } from './deriveAccentPalette'
 
-export type AccentChoice =
-  | { type: 'preset'; id: AccentPresetId }
-  | { type: 'custom'; hex: string }
+export type AccentChoice = { type: 'preset'; id: AccentPresetId } | { type: 'custom'; hex: string }
 
 const STORAGE_KEY = 'openpad:accent'
 const DEFAULT_CHOICE: AccentChoice = { type: 'preset', id: 'green' }

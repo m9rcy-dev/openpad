@@ -12,19 +12,29 @@ and [`../PROGRESS.md`](../PROGRESS.md) for what's built vs. planned.
 
 ## Before every commit
 
+A Husky `pre-commit` hook runs `lint-staged` automatically on
+`git commit`: Prettier (`--write`) on every staged file, plus ESLint
+(`--fix`) on staged `.ts`/`.tsx` — the same formatting/lint gate CI
+enforces, but applied to your staged changes before they're even
+committed, so a formatting slip can't reach CI in the first place. It's
+installed via the `prepare` script, so `npm install` sets it up with no
+extra step.
+
+That hook doesn't typecheck, test, or build — those are slower and
+still worth running yourself before pushing:
+
 ```bash
-npm run format        # Prettier
-npm run lint           # ESLint (type-aware)
 npm run typecheck      # tsc -b
 npm test               # Vitest
 npm run build           # production build (also generates the service worker)
 ```
 
-All of these run in CI (`.github/workflows/ci.yml`) on every push and
-pull request — a green local run means a green CI run. `npm run e2e`
-(Playwright, against a real production build) runs in CI as a separate
-job; run it locally with `npm run build && npm run e2e` if you're
-touching anything user-facing.
+All of these (plus `format:check`/`lint`, redundantly re-verifying what
+the hook already fixed) run in CI (`.github/workflows/ci.yml`) on every
+push and pull request — a green local run means a green CI run. `npm
+run e2e` (Playwright, against a real production build) runs in CI as a
+separate job; run it locally with `npm run build && npm run e2e` if
+you're touching anything user-facing.
 
 ## Conventions
 

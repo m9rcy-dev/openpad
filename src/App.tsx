@@ -47,8 +47,11 @@ function noticeFromToolStatus(status: ToolRunStatus): StatusNotice {
 
 export default function App() {
   const { theme, toggleTheme } = useTheme()
-  const { choice: accentChoice, setPreset: setAccentPreset, setCustom: setAccentCustom } =
-    useAccentTheme(theme)
+  const {
+    choice: accentChoice,
+    setPreset: setAccentPreset,
+    setCustom: setAccentCustom,
+  } = useAccentTheme(theme)
   const [themeDialogOpen, setThemeDialogOpen] = useState(false)
   const [shareDialogOpen, setShareDialogOpen] = useState(false)
   const [cursor, setCursor] = useState<CursorInfo>(INITIAL_CURSOR)
@@ -243,9 +246,7 @@ export default function App() {
         onOpenFile={handleOpenFile}
         onSaveFile={() => handleSaveFile(activeDocument)}
         onSaveFileAs={() => handleSaveFileAs(activeDocument)}
-        getEditState={() =>
-          editorRef.current?.getEditState() ?? { canUndo: false, canRedo: false }
-        }
+        getEditState={() => editorRef.current?.getEditState() ?? { canUndo: false, canRedo: false }}
         onUndo={() => editorRef.current?.undo()}
         onRedo={() => editorRef.current?.redo()}
         onFind={() => editorRef.current?.openFind()}
@@ -338,7 +339,10 @@ export default function App() {
             setNotice(
               success
                 ? { kind: 'success', text: 'Link copied to clipboard' }
-                : { kind: 'error', text: "Copy failed — the link is shown above, copy it manually" },
+                : {
+                    kind: 'error',
+                    text: 'Copy failed — the link is shown above, copy it manually',
+                  },
             )
           }
         />

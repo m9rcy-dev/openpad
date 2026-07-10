@@ -57,8 +57,8 @@ export function ShareDialog({ url, onClose, onCopyResult }: ShareDialogProps) {
           </button>
         </div>
         <p className="share-dialog-hint">
-          The content lives entirely in this link — there's no server copy, so anyone you send it
-          to sees exactly what's here now.
+          The content lives entirely in this link — there's no server copy, so anyone you send it to
+          sees exactly what's here now.
         </p>
         <input
           ref={inputRef}

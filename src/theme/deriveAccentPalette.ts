@@ -51,8 +51,7 @@ export function deriveAccentPalette(hex: string, mode: 'light' | 'dark'): Accent
   const accentS = mode === 'light' ? clamp(inputS, 45, 90) : clamp(inputS, 40, 85)
   const accent = hslToHex({ h, s: accentS, l: accentL })
 
-  const inkL =
-    mode === 'light' ? clamp(accentL - 15, 20, 40) : clamp(accentL + 12, 70, 88)
+  const inkL = mode === 'light' ? clamp(accentL - 15, 20, 40) : clamp(accentL + 12, 70, 88)
   const accentInk = hslToHex({ h, s: accentS, l: inkL })
 
   const softS = mode === 'light' ? clamp(accentS * 0.4, 20, 45) : clamp(accentS * 0.5, 25, 50)

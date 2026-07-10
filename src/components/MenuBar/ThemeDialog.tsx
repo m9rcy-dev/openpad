@@ -75,7 +75,9 @@ export function ThemeDialog({ choice, onSelectPreset, onSelectCustom, onClose }:
           >
             <span
               className={
-                customHex === undefined ? 'theme-swatch-color theme-swatch-custom' : 'theme-swatch-color'
+                customHex === undefined
+                  ? 'theme-swatch-color theme-swatch-custom'
+                  : 'theme-swatch-color'
               }
               style={customHex === undefined ? undefined : { background: customHex }}
               aria-hidden="true"
