@@ -15,7 +15,9 @@ src/
 │                         owns keyboard shortcuts, drag-and-drop, dialogs
 ├── components/           Presentational React components (one folder each)
 │   ├── EditorPane/        CodeMirror wrapper — the editing surface
-│   ├── MenuBar/            File/Tools menus, Compare trigger, theme toggle
+│   ├── MenuBar/            File/Edit/Tools menus, Compare trigger, theme
+│   │                         toggle — Edit carries Undo/Redo/Find/Replace/
+│   │                         Theme…, Tools carries the fixed Share… entry
 │   ├── StatusBar/          Cursor position, counts, autosave, notices
 │   ├── TabBar/             Tab strip: activate, rename, close
 │   └── ShortcutsDialog/    "?" keyboard-shortcut reference
@@ -26,9 +28,12 @@ src/
 ├── preview/              Markdown → sanitized HTML, Mermaid, PlantUML
 ├── compare/              Read-only side-by-side diff (@codemirror/merge)
 ├── files/                Open/Save via File System Access API + fallbacks
+├── share/                Stateless share-link codec, URL builder, and
+│                         inbound-link import (see "Share links" below)
 ├── store/                Zustand documents store (tabs, active doc)
 ├── storage/              IndexedDB autosave/restore (idb-keyval)
-├── theme/                Light/dark theme state
+├── theme/                Light/dark theme state, plus the accent-color
+│                         system (presets + custom derivation)
 ├── pwa/                  Service-worker update UI
 └── types/                Shared domain types (NotepadDocument, ToolResult)
 ```
@@ -80,6 +85,12 @@ CodeMirror document: it runs the tool against the selection (or the whole
 document if nothing is selected) and applies the result as a single
 undoable change.
 
+Undo/Redo/Find/Replace (the Edit menu) deliberately sit **outside** this
+pattern — they're CodeMirror/browser commands, not text transforms, so
+they're exposed as plain imperative methods on `EditorPaneHandle`
+(`undo`, `redo`, `openFind`, `openReplace`, `getEditState`) instead of
+registry entries, the same way Open/Save/Compare already bypass it.
+
 ## Editor (CodeMirror 6)
 
 `src/editor/useCodeMirror.ts` is the React ↔ CodeMirror bridge: CodeMirror
@@ -90,6 +101,39 @@ hook keeps them in sync without recreating the view on every keystroke
 `src/editor/theme.ts` maps the editor's colors and syntax highlighting to
 the CSS custom properties in `src/index.css` — the editor never hardcodes
 a color, so light/dark theme switching needs no editor reconfiguration.
+
+## Accent theming (`src/theme/`)
+
+Light/dark (`useTheme.ts`) redefines a whole token set through CSS
+`[data-theme]` blocks. The accent color — `--accent`, `--accent-ink`,
+`--accent-soft`, and `--accent-on` — works differently, because a
+user-picked custom color has no precomputed CSS class to switch to:
+`useAccentTheme.ts` computes all four as **inline styles** on
+`document.documentElement` instead, recomputing whenever the accent
+choice or the light/dark mode changes. Inline style outranks
+`index.css`'s `[data-theme]` blocks by design — those just supply the
+chameleon-green default for the instant before this hook's first effect
+runs.
+
+Two sources feed a palette, sharing one shape
+(`{ accent, accentInk, accentSoft, accentOn }`):
+
+- **Presets** (`accentPresets.ts`) — Chameleon Green, Cobalt Blue,
+  Digital Violet — are hand-curated constant tables, not derived. A
+  generic formula can't reproduce them: Digital Violet's soft tint is
+  deliberately the exact Olivia Rodrigo SOUR-era pastel lilac, not a
+  mechanically desaturated version of the deep solid-button violet.
+- **Custom colors** (`deriveAccentPalette.ts`) go through real HSL math
+  (`color.ts`: hex↔HSL, relative luminance, contrast ratio) since
+  hand-curation isn't possible for an arbitrary pick.
+
+`accentOn` — the text color for solid-accent surfaces (buttons, the
+active dropdown item, the PWA update banner, the CodeMirror
+selected-search-match highlight) — is always computed from the
+*resulting* `accent` value's actual contrast against white vs. a fixed
+dark neutral, never assumed. That's what makes a freely-chosen custom
+color safe: a bright pick (yellow, lime) automatically gets dark text
+instead of illegible white-on-yellow, with no per-hue special case.
 
 ## Preview pipeline (Markdown / Mermaid / PlantUML)
 
@@ -122,6 +166,33 @@ UI renders. File handles from the File System Access API (`src/files/`)
 are deliberately **not** persisted — a stored handle's permission grant
 doesn't reliably survive a reload, so every session starts handle-less
 and the first Save behaves like Save As once.
+
+## Share links (`src/share/`)
+
+A **Share…** entry in the Tools menu turns the active document into a
+self-contained URL — the same stateless mechanism as the standalone
+`shareable-notepad` project: `codec.ts` encodes text as UTF-8 bytes →
+base64 → URL-safe substitution (`+`/`/`/`=` → `-`/`_`/nothing), so the
+result drops straight into a URL hash fragment with no escaping and no
+server involved. `shareLink.ts` builds the link against
+`window.location.origin`/`pathname` (works unmodified in dev and on the
+deployed GitHub Pages `base` path) and gates whether one can be built at
+all: **length is the only real constraint** (every character becomes
+part of a URL-safe alphabet before it touches the URL, so there's no
+"invalid character" case) — `Share…` is disabled, not click-then-warned,
+whenever the active document is over `MAX_SHARE_CHARS` (20,000, the same
+ceiling `shareable-notepad` already validates in production).
+
+Receiving is the mirror image: `importSharedLink.ts` reads and clears
+`window.location.hash` once, right after the documents store finishes
+hydrating on boot, and loads the decoded content into a **new tab** via
+`loadIntoTab` (exported from `src/files/useFileOperations.ts` — the
+same "reuse the sole empty tab, else add a new one" rule opening a file
+already uses). Clearing the hash immediately means a reload never
+re-imports the same link into a second tab. A hand-edited or
+externally-produced link that somehow exceeds `MAX_SHARE_CHARS` is
+truncated on the way in rather than rejected — defense in depth, since
+the app itself never generates an oversized one.
 
 ## Offline (PWA)
 

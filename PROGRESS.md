@@ -7,16 +7,21 @@
 
 ## Current state
 
-**M9 done — all 9 planned milestones complete.** Playwright e2e suite (9
-tests, all passing under parallel workers), coverage thresholds enforced
-in CI (100% on `src/tools/**`, ~90%+ overall with `App.tsx` excluded as
-orchestration glue covered by e2e instead), a "?" keyboard-shortcuts
-dialog, and `docs/ARCHITECTURE.md` + `docs/CONTRIBUTING.md` +
-`.github/dependabot.yml` + `LICENSE`. 235 unit/component tests green.
+**M9 done — all 9 originally planned milestones complete**, plus three
+post-plan features: **M10 — Edit menu** (Undo/Redo/Find/Replace,
+`docs/openpad-feature-01-plan.md`), **M11 — Theme picker** (accent
+color presets + custom picker), and **M12 — Share tool** (stateless
+share links), both from `docs/openpad-feature-02-plan.md`. Playwright
+e2e suite (9 tests, all passing under parallel workers), coverage
+thresholds enforced in CI (100% on `src/tools/**`, ~90%+ overall with
+`App.tsx` excluded as orchestration glue covered by e2e instead), a "?"
+keyboard-shortcuts dialog, and `docs/ARCHITECTURE.md` +
+`docs/CONTRIBUTING.md` + `.github/dependabot.yml` + `LICENSE`.
 
-The app is feature-complete per the approved plan. Remaining known gaps
-are the visual-only offline verification noted in M8, and the two items
-below that need the user directly.
+Remaining known gaps are the visual-only offline verification noted in
+M8, e2e coverage for M11/M12 (unit/component tests are in place; no
+Playwright cases added yet for the theme picker or share flow), and the
+two items below that need the user directly.
 
 **Blocked on user:** GitHub repository creation + push, and enabling
 Pages (Settings → Pages → Source → "GitHub Actions") to verify the
@@ -180,6 +185,129 @@ job passes on GitHub's runners too (only run locally so far).
   (MIT, matching `package.json`). Final `npm audit --audit-level=high`:
   0 vulnerabilities.
 
+## M10 — Edit menu (post-plan feature)
+
+Plan: `docs/openpad-feature-01-plan.md`.
+
+- [x] `EditorPaneHandle` extended with `undo`, `redo`, `openFind`,
+      `openReplace`, `getEditState` — dispatches `@codemirror/commands`'
+      `undo`/`redo`/`undoDepth`/`redoDepth` and `@codemirror/search`'s
+      `openSearchPanel` on the live view; `openReplace` additionally
+      focuses the panel's replace field
+- [x] `EditMenu` component (`src/components/MenuBar/EditMenu.tsx`):
+      Undo, Redo, Find…, Replace…, mounted between File and Tools.
+      Undo/Redo disabled state is read from `getEditState()` once when
+      the dropdown opens, not kept in sync on every keystroke
+- [x] Cut/Copy/Paste deliberately excluded — already work via native OS
+      shortcuts; wiring the Clipboard API in purely for menu
+      discoverability was judged not worth the cross-browser risk
+      (Firefox restricts `clipboard.readText()`) — see the plan's Context
+- [x] Regex find/replace needed no new implementation: CodeMirror's
+      built-in search panel already ships a regexp checkbox plus
+      case-sensitive/whole-word toggles and Replace/Replace All, themed
+      to match the app already
+- [x] "?" shortcuts dialog: new Edit group (Undo, Redo, Find, Replace);
+      Redo's binding is platform-dependent (`Cmd+Shift+Z` mac /
+      `Ctrl+Y` elsewhere, per `@codemirror/commands`' `historyKeymap`) —
+      added `redoShortcut()` to `src/utils/shortcuts.ts` to get it right
+      on both
+- [x] Found and fixed a pre-existing bug while extending `runTool`:
+      `onToolStatusRef.current?.(applyToolToEditor(view, tool))` never
+      evaluated `applyToolToEditor(...)` at all when `onToolStatus` was
+      undefined, because an optional call's arguments are never
+      evaluated when its callee is nullish — masked in production since
+      `App.tsx` always passes the callback, but a real landmine. See
+      decision log
+- [ ] Playwright e2e additions for Undo/Redo/Find/Replace via menu
+      _(not yet added — unit/component coverage is in place; e2e still
+      pending)_
+
+## M11 — Theme picker (post-plan feature)
+
+Plan: `docs/openpad-feature-02-plan.md`, Part A.
+
+- [x] `src/theme/color.ts` + tests: hex↔HSL round-trips, WCAG relative
+      luminance and contrast ratio, `clamp` — pure math, no app
+      knowledge
+- [x] `src/theme/deriveAccentPalette.ts` + tests: derives
+      `{ accent, accentInk, accentSoft, accentOn }` from one custom hex
+      for either light or dark mode; `accentOn` is computed from the
+      *derived* accent's real contrast, not guessed from the input, so
+      a bright custom pick (verified with a saturated yellow) always
+      gets legible dark text automatically
+- [x] `src/theme/accentPresets.ts`: Chameleon Green / Cobalt Blue /
+      Digital Violet hand-curated tables (the exact values validated in
+      the earlier artifact-based color review); green mirrors
+      `index.css`'s shipped tokens exactly, so it's a true no-op default
+- [x] `src/theme/useAccentTheme.ts` + tests: persists the choice
+      (`openpad:accent`) and applies all four tokens as **inline
+      styles** on `<html>`, re-deriving a custom color when the
+      light/dark mode changes instead of losing it
+- [x] Fixed the five spots that hardcoded `color: #ffffff` instead of a
+      token (`MenuBar.css`, `DropdownMenu.css` ×2, `UpdatePrompt.css`,
+      `editor/theme.ts`'s `.cm-searchMatch-selected`) to read the new
+      `--accent-on` token; added its default to all four blocks in
+      `index.css`
+- [x] `ThemeDialog.tsx` + tests: three preset swatches + a "Custom…"
+      swatch that triggers a native `<input type="color">`; applies
+      immediately, stays open after a pick, closes via Escape/backdrop/
+      Close
+- [x] Wired `Theme…` into `EditMenu` → `MenuBar` → `App.tsx`
+- [x] Found and fixed a real bug during implementation, not just a
+      typo: the first `accentOn` design compared a dark-mode accent
+      against the app's dark-mode `--ink` token — but dark-mode `--ink`
+      is a *light* color (body text on a dark background), so a bright
+      dark-mode accent had no genuinely dark candidate to fall back to.
+      Fixed by comparing against two fixed candidates (white / a fixed
+      dark neutral) regardless of app mode — caught by the "keeps
+      accentOn legibly contrasted" test, not by inspection. See
+      decision log
+
+## M12 — Share tool (post-plan feature)
+
+Plan: `docs/openpad-feature-02-plan.md`, Part B.
+
+- [x] `src/share/codec.ts` + tests: UTF-8 → base64url codec, same
+      algorithm as `shareable-notepad`'s `Codec` module — ASCII, empty,
+      Unicode, emoji, mixed, newlines/tabs, Arabic RTL, and malformed
+      input decoding to `''` instead of throwing, all ported from that
+      app's own test list
+- [x] One deliberate improvement over the reference during the port:
+      byte-to-binary-string conversion is chunked instead of
+      `String.fromCharCode(...bytes)` in one call, which can throw
+      `RangeError: Maximum call stack size exceeded` on a large
+      `Uint8Array` (each byte becomes a spread argument) — verified with
+      a 100k-character round-trip test
+- [x] `src/share/shareLink.ts` + tests: `MAX_SHARE_CHARS = 20000` (same
+      ceiling the reference already validates in production),
+      `isOverShareLimit`, `buildShareUrl` (against the current
+      origin+pathname, not a hardcoded domain)
+- [x] Exported `loadIntoTab` from `src/files/useFileOperations.ts` and
+      `nextUntitledName` from `src/store/documentsStore.ts` — both were
+      module-private; the share-import path reuses them instead of
+      duplicating the "replace the sole empty tab, else add a new one"
+      rule and its collision-free naming
+- [x] `ShareDialog.tsx` + tests: read-only auto-selected URL field +
+      Copy link button (Clipboard API, success/failure reported via a
+      callback, not a new toast system)
+- [x] **Share…** wired into `ToolsMenu` as a fixed, non-registry entry
+      below the categories, `disabled` + explanatory `title` driven by
+      `isOverShareLimit(activeDocument.content)` — gated *before* the
+      dialog can open, not click-then-warned, since length is the only
+      real constraint (every character becomes a URL-safe base64
+      character, so there's no "invalid character" case)
+- [x] `src/share/importSharedLink.ts` + tests: `consumeSharedLink()`
+      reads and unconditionally clears `location.hash` once it's
+      non-empty (even a malformed link doesn't linger in the address
+      bar), decodes it, and truncates to `MAX_SHARE_CHARS` with a
+      `truncated` flag as defense in depth for a hand-edited or
+      externally-produced oversized link
+- [x] Wired a post-hydration effect in `App.tsx`: `consumeSharedLink()`
+      → `loadIntoTab()` into a new tab (never overwrites existing work)
+      → status notice ("Loaded shared note" or the truncation warning)
+- [ ] Playwright e2e additions for the share round-trip (generate a
+      link, navigate to it, confirm a new tab loads) — not yet added
+
 ## Decision log
 
 - 2026-07-07 — create-vite now ships React 19 / Vite 8 / TS 6 / oxlint; kept
@@ -221,3 +349,43 @@ job passes on GitHub's runners too (only run locally so far).
   `navigator.serviceWorker.controller` specifically — controller, not
   just an active registration, is the real signal this page will be
   served from the SW cache.
+- 2026-07-10 — Adding an `EditorPane` test that didn't pass an
+  `onToolStatus` prop surfaced a real bug in `runTool`:
+  `onToolStatusRef.current?.(applyToolToEditor(view, tool))` — an
+  optional call's arguments are never evaluated when its callee is
+  nullish, so with no `onToolStatus` callback, `applyToolToEditor(...)`
+  silently never ran at all; the tool wouldn't apply, not just fail to
+  report. Masked in production because `App.tsx` always passes the
+  callback. Fixed by evaluating the tool result into a variable first,
+  then calling the optional callback with it. General rule: never nest
+  a side-effecting call inside `x?.(...)` — the side effect depends on
+  `x` being defined, which is rarely the intent.
+- 2026-07-10 — `deriveAccentPalette`'s first `accentOn` implementation
+  picked between white and the app's mode-matched `--ink` token, which
+  seemed elegant (stays in sync if `--ink` is retuned) but was wrong:
+  dark-mode `--ink` is a *light* color (it's body text on a dark
+  background), so a bright dark-mode accent — the derivation
+  deliberately lightens accents in dark mode — had no genuinely dark
+  candidate to contrast against. The "keeps accentOn legibly
+  contrasted" test caught it immediately (contrast ratios around 2,
+  need ≥3) where eyeballing the code would not have. Fixed by comparing
+  against two mode-independent fixed colors (white / a fixed dark
+  neutral) instead — text-on-a-bright-button legibility isn't actually
+  related to which app mode produced that button. General rule for this
+  codebase: when a "just reuse the existing token" idea sounds too
+  convenient, check what that token is actually *for* before reusing it
+  for a different purpose.
+- 2026-07-10 — Porting `shareable-notepad`'s `Codec.encode` surfaced a
+  latent bug in the *source* being ported, not something introduced
+  here: `btoa(String.fromCharCode(...bytes))` spreads every byte as a
+  function argument, which throws `RangeError: Maximum call stack size
+  exceeded` on some engines once a `Uint8Array` gets large enough (each
+  byte is one spread argument). Never manifested in the reference app in
+  practice — 20,000 characters of mostly-ASCII text stays under the
+  limit — but a 20,000-character string of 4-byte-UTF-8 characters
+  (emoji-heavy content) gets close, and nothing stopped a determined
+  Unicode stress test from finding it. Fixed with a chunked conversion
+  instead of a straight port; verified with a 100k-character round-trip
+  test. General rule: "port the algorithm" doesn't mean "port a known JS
+  anti-pattern along with it" — worth a second look at *how* a reference
+  implementation does something, not just *what* it computes.

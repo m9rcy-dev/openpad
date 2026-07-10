@@ -13,12 +13,17 @@ import { EditorPane, type EditorPaneHandle } from './components/EditorPane/Edito
 import { MenuBar } from './components/MenuBar/MenuBar'
 import { StatusBar, type StatusNotice } from './components/StatusBar/StatusBar'
 import { TabBar } from './components/TabBar/TabBar'
-import { useFileOperations } from './files/useFileOperations'
+import { loadIntoTab, useFileOperations } from './files/useFileOperations'
 import { PreviewPane, type PreviewPaneHandle } from './preview/PreviewPane'
 import { UpdatePrompt } from './pwa/UpdatePrompt'
 import { ShortcutsDialog } from './components/ShortcutsDialog/ShortcutsDialog'
-import { selectActiveDocument, useDocumentsStore } from './store/documentsStore'
+import { ShareDialog } from './components/MenuBar/ShareDialog'
+import { ThemeDialog } from './components/MenuBar/ThemeDialog'
+import { consumeSharedLink } from './share/importSharedLink'
+import { buildShareUrl, isOverShareLimit, MAX_SHARE_CHARS } from './share/shareLink'
+import { nextUntitledName, selectActiveDocument, useDocumentsStore } from './store/documentsStore'
 import { hydrateDocumentsStore } from './storage/persistence'
+import { useAccentTheme } from './theme/useAccentTheme'
 import { useTheme } from './theme/useTheme'
 import type { CursorInfo, NotepadDocument } from './types/document'
 import type { ToolRunStatus } from './tools/apply'
@@ -42,6 +47,10 @@ function noticeFromToolStatus(status: ToolRunStatus): StatusNotice {
 
 export default function App() {
   const { theme, toggleTheme } = useTheme()
+  const { choice: accentChoice, setPreset: setAccentPreset, setCustom: setAccentCustom } =
+    useAccentTheme(theme)
+  const [themeDialogOpen, setThemeDialogOpen] = useState(false)
+  const [shareDialogOpen, setShareDialogOpen] = useState(false)
   const [cursor, setCursor] = useState<CursorInfo>(INITIAL_CURSOR)
   const [notice, setNotice] = useState<StatusNotice | null>(null)
   const editorRef = useRef<EditorPaneHandle>(null)
@@ -71,14 +80,31 @@ export default function App() {
   const { openFile, saveDocument, saveDocumentAs, openDroppedFiles } = useFileOperations()
 
   // Load the persisted workspace once, then autosave for the app lifetime.
+  // A shared link (see src/share/) is consumed right after hydration, so
+  // `isEmptyUntitledDocument` sees the real restored tab set rather than
+  // a transient empty one.
   useEffect(() => {
     let cancelled = false
     let stopAutosave: (() => void) | undefined
     void hydrateDocumentsStore().then((stop) => {
       if (cancelled) {
         stop()
-      } else {
-        stopAutosave = stop
+        return
+      }
+      stopAutosave = stop
+
+      const shared = consumeSharedLink()
+      if (shared !== null) {
+        const name = nextUntitledName(useDocumentsStore.getState().documents)
+        loadIntoTab(name, shared.content, null)
+        setNotice(
+          shared.truncated
+            ? {
+                kind: 'error',
+                text: `Shared note was truncated to ${MAX_SHARE_CHARS.toLocaleString()} characters`,
+              }
+            : { kind: 'success', text: 'Loaded shared note' },
+        )
       }
     })
     return () => {
@@ -217,6 +243,16 @@ export default function App() {
         onOpenFile={handleOpenFile}
         onSaveFile={() => handleSaveFile(activeDocument)}
         onSaveFileAs={() => handleSaveFileAs(activeDocument)}
+        getEditState={() =>
+          editorRef.current?.getEditState() ?? { canUndo: false, canRedo: false }
+        }
+        onUndo={() => editorRef.current?.undo()}
+        onRedo={() => editorRef.current?.redo()}
+        onFind={() => editorRef.current?.openFind()}
+        onReplace={() => editorRef.current?.openReplace()}
+        onOpenTheme={() => setThemeDialogOpen(true)}
+        onOpenShare={() => setShareDialogOpen(true)}
+        shareDisabled={isOverShareLimit(activeDocument.content)}
         onOpenCompare={() => setCompareDialogOpen(true)}
         onOpenShortcuts={() => setShortcutsOpen(true)}
       />
@@ -286,6 +322,27 @@ export default function App() {
         />
       )}
       {shortcutsOpen && <ShortcutsDialog onClose={() => setShortcutsOpen(false)} />}
+      {themeDialogOpen && (
+        <ThemeDialog
+          choice={accentChoice}
+          onSelectPreset={setAccentPreset}
+          onSelectCustom={setAccentCustom}
+          onClose={() => setThemeDialogOpen(false)}
+        />
+      )}
+      {shareDialogOpen && (
+        <ShareDialog
+          url={buildShareUrl(activeDocument.content)}
+          onClose={() => setShareDialogOpen(false)}
+          onCopyResult={(success) =>
+            setNotice(
+              success
+                ? { kind: 'success', text: 'Link copied to clipboard' }
+                : { kind: 'error', text: "Copy failed — the link is shown above, copy it manually" },
+            )
+          }
+        />
+      )}
       <UpdatePrompt />
     </div>
   )

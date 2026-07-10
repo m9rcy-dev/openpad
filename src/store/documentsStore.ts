@@ -66,8 +66,13 @@ export function newDocument(name: string): NotepadDocument {
   }
 }
 
-/** First `untitled-N` name not already taken by an open document. */
-function nextUntitledName(documents: NotepadDocument[]): string {
+/**
+ * First `untitled-N` name not already taken by an open document.
+ * Exported for `src/share/importSharedLink.ts` — an inbound shared
+ * link has no filename of its own, so it needs the same collision-free
+ * naming `createDocument` uses internally.
+ */
+export function nextUntitledName(documents: NotepadDocument[]): string {
   const taken = new Set(documents.map((doc) => doc.name))
   let n = 1
   while (taken.has(`untitled-${n}`)) {

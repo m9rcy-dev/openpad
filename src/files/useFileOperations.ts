@@ -75,8 +75,16 @@ async function saveAs(doc: NotepadDocument): Promise<void> {
  * Loads file content into a tab: reuses the sole untouched `untitled-N`
  * tab if that's all that's open, otherwise adds a new tab. Registers the
  * file handle (if any) against whichever document id ends up holding it.
+ *
+ * Exported for reuse by `src/share/importSharedLink.ts` — an inbound
+ * shared link needs exactly this same "replace the empty tab, else add
+ * a new one" rule, just with `handle` always `null`.
  */
-function loadIntoTab(name: string, content: string, handle: FileSystemFileHandle | null): void {
+export function loadIntoTab(
+  name: string,
+  content: string,
+  handle: FileSystemFileHandle | null,
+): void {
   const store = useDocumentsStore.getState()
   const { documents } = store
   const solitary = documents.length === 1 ? documents[0] : undefined

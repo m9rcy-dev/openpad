@@ -63,6 +63,52 @@ describe('EditorPane', () => {
     expect(document.activeElement?.closest('[data-testid="editor-pane"]')).not.toBeNull()
   })
 
+  it('reports no undo/redo history for a freshly mounted document', () => {
+    const ref = createRef<EditorPaneHandle>()
+    render(<EditorPane ref={ref} value="x" language="plain" onChange={vi.fn()} />)
+    expect(ref.current?.getEditState()).toEqual({ canUndo: false, canRedo: false })
+  })
+
+  it('undoes and redoes an edit via the imperative handle', () => {
+    const ref = createRef<EditorPaneHandle>()
+    render(<EditorPane ref={ref} value="hello" language="plain" onChange={vi.fn()} />)
+
+    // runTool dispatches through the live view, same as typing — it
+    // lands in the undo history the way setting the `value` prop wouldn't.
+    ref.current?.runTool({
+      id: 'test-append',
+      label: 'Append',
+      category: 'Text',
+      run: (input) => ({ ok: true, output: `${input}!` }),
+    })
+    expect(screen.getByTestId('editor-pane')).toHaveTextContent('hello!')
+    expect(ref.current?.getEditState()).toEqual({ canUndo: true, canRedo: false })
+
+    ref.current?.undo()
+    expect(screen.getByTestId('editor-pane')).toHaveTextContent('hello')
+    expect(ref.current?.getEditState()).toEqual({ canUndo: false, canRedo: true })
+
+    ref.current?.redo()
+    expect(screen.getByTestId('editor-pane')).toHaveTextContent('hello!')
+    expect(ref.current?.getEditState()).toEqual({ canUndo: true, canRedo: false })
+  })
+
+  it('opens the search panel focused on the search field via openFind', () => {
+    const ref = createRef<EditorPaneHandle>()
+    render(<EditorPane ref={ref} value="find me" language="plain" onChange={vi.fn()} />)
+    ref.current?.openFind()
+    const searchInput = screen.getByRole('textbox', { name: 'Find' })
+    expect(searchInput).toBeInTheDocument()
+  })
+
+  it('opens the search panel focused on the replace field via openReplace', () => {
+    const ref = createRef<EditorPaneHandle>()
+    render(<EditorPane ref={ref} value="find me" language="plain" onChange={vi.fn()} />)
+    ref.current?.openReplace()
+    const replaceInput = screen.getByRole('textbox', { name: 'Replace' })
+    expect(replaceInput).toHaveFocus()
+  })
+
   it('reports scroll position for preview sync', () => {
     const onScrollRatio = vi.fn()
     render(

@@ -4,15 +4,28 @@ import { describe, expect, it, vi } from 'vitest'
 import { ShortcutsDialog } from './ShortcutsDialog'
 
 describe('ShortcutsDialog', () => {
-  it('lists File, Tools, and View shortcut groups', () => {
+  it('lists File, Edit, Tools, and View shortcut groups', () => {
     render(<ShortcutsDialog onClose={vi.fn()} />)
     const dialog = screen.getByRole('dialog', { name: 'Keyboard shortcuts' })
     expect(dialog).toHaveTextContent('File')
     expect(dialog).toHaveTextContent('Open…')
+    expect(dialog).toHaveTextContent('Edit')
+    expect(dialog).toHaveTextContent('Undo')
+    expect(dialog).toHaveTextContent('Redo')
+    expect(dialog).toHaveTextContent('Find…')
+    expect(dialog).toHaveTextContent('Replace…')
     expect(dialog).toHaveTextContent('Tools')
     expect(dialog).toHaveTextContent('JSON · Format')
     expect(dialog).toHaveTextContent('View')
     expect(dialog).toHaveTextContent('Compare with…')
+  })
+
+  it("shows Redo's platform-correct binding", () => {
+    vi.spyOn(navigator, 'platform', 'get').mockReturnValue('Linux x86_64')
+    render(<ShortcutsDialog onClose={vi.fn()} />)
+    const dialog = screen.getByRole('dialog', { name: 'Keyboard shortcuts' })
+    expect(dialog).toHaveTextContent('Ctrl+Y')
+    vi.restoreAllMocks()
   })
 
   it('closes via the close button', async () => {

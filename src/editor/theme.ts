@@ -57,7 +57,7 @@ const chromeTheme = EditorView.theme({
   },
   '.cm-searchMatch-selected': {
     backgroundColor: 'var(--accent)',
-    color: '#ffffff',
+    color: 'var(--accent-on)',
   },
   '.cm-panels': {
     backgroundColor: 'var(--chrome)',

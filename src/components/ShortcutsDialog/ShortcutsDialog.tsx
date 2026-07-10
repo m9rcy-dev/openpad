@@ -1,12 +1,13 @@
 /**
  * Keyboard-shortcut reference: a small always-available modal listing
- * every shortcut in the app. File and Compare entries are hardcoded (they
- * aren't part of the tool registry); tool shortcuts are read straight
- * from `TOOLS`, so a new shortcut there appears here automatically.
+ * every shortcut in the app. File, Edit, and Compare entries are
+ * hardcoded (they aren't part of the tool registry); tool shortcuts are
+ * read straight from `TOOLS`, so a new shortcut there appears here
+ * automatically.
  */
 import { useEffect, useRef } from 'react'
 import { TOOLS } from '../../tools/registry'
-import { formatShortcut } from '../../utils/shortcuts'
+import { formatShortcut, redoShortcut } from '../../utils/shortcuts'
 import './ShortcutsDialog.css'
 
 export interface ShortcutsDialogProps {
@@ -15,7 +16,8 @@ export interface ShortcutsDialogProps {
 
 interface ShortcutEntry {
   label: string
-  shortcut: string
+  /** Omitted for actions with no dedicated key binding (e.g. Replace…). */
+  shortcut?: string
 }
 
 const FILE_SHORTCUTS: ShortcutEntry[] = [
@@ -25,6 +27,17 @@ const FILE_SHORTCUTS: ShortcutEntry[] = [
 ]
 
 const VIEW_SHORTCUTS: ShortcutEntry[] = [{ label: 'Compare with…', shortcut: 'Mod-Shift-c' }]
+
+// Redo's key differs by platform (see historyKeymap), so this is built at
+// render time rather than as a module-level constant like the others.
+function editShortcuts(): ShortcutEntry[] {
+  return [
+    { label: 'Undo', shortcut: 'Mod-z' },
+    { label: 'Redo', shortcut: redoShortcut() },
+    { label: 'Find…', shortcut: 'Mod-f' },
+    { label: 'Replace…' },
+  ]
+}
 
 const TOOL_SHORTCUTS: ShortcutEntry[] = TOOLS.filter((tool) => tool.shortcut !== undefined).map(
   (tool) => ({ label: `${tool.category} · ${tool.label}`, shortcut: tool.shortcut ?? '' }),
@@ -65,6 +78,7 @@ export function ShortcutsDialog({ onClose }: ShortcutsDialogProps) {
           </button>
         </div>
         <ShortcutGroup title="File" entries={FILE_SHORTCUTS} />
+        <ShortcutGroup title="Edit" entries={editShortcuts()} />
         <ShortcutGroup title="Tools" entries={TOOL_SHORTCUTS} />
         <ShortcutGroup title="View" entries={VIEW_SHORTCUTS} />
       </div>
@@ -83,7 +97,7 @@ function ShortcutGroup({ title, entries }: { title: string; entries: ShortcutEnt
         {entries.map((entry) => (
           <div className="shortcuts-dialog-row" key={entry.label}>
             <dt>{entry.label}</dt>
-            <dd>{formatShortcut(entry.shortcut)}</dd>
+            <dd>{entry.shortcut === undefined ? null : formatShortcut(entry.shortcut)}</dd>
           </div>
         ))}
       </dl>

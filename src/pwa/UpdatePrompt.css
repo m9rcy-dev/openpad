@@ -21,7 +21,7 @@
   border: 1px solid var(--accent);
   border-radius: 6px;
   background: var(--accent);
-  color: #ffffff;
+  color: var(--accent-on);
   font-family: var(--font-mono);
   font-size: 12px;
   padding: 4px 10px;

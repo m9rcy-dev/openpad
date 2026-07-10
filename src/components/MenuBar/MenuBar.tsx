@@ -1,9 +1,12 @@
 /**
  * Top application bar: brand, menus, and global controls.
- * Carries the File menu (open/save), Tools menu (registry-driven), and
- * the theme toggle (see docs/ui-mockup.html for the final layout).
+ * Carries the File menu (open/save), Edit menu (undo/redo/find/replace),
+ * Tools menu (registry-driven), and the theme toggle (see
+ * docs/ui-mockup.html for the final layout).
  */
+import type { EditState } from '../EditorPane/EditorPane'
 import type { ToolDefinition } from '../../types/tools'
+import { EditMenu } from './EditMenu'
 import { FileMenu } from './FileMenu'
 import { ToolsMenu } from './ToolsMenu'
 import './DropdownMenu.css' // reuses the .menu-trigger button style for Compare
@@ -23,6 +26,16 @@ export interface MenuBarProps {
   onOpenFile: () => void
   onSaveFile: () => void
   onSaveFileAs: () => void
+  /** Reads the current Undo/Redo availability from the live editor. */
+  getEditState: () => EditState
+  onUndo: () => void
+  onRedo: () => void
+  onFind: () => void
+  onReplace: () => void
+  onOpenTheme: () => void
+  onOpenShare: () => void
+  /** True when the active document is too long to generate a share link for. */
+  shareDisabled: boolean
   onOpenCompare: () => void
   onOpenShortcuts: () => void
 }
@@ -37,6 +50,14 @@ export function MenuBar({
   onOpenFile,
   onSaveFile,
   onSaveFileAs,
+  getEditState,
+  onUndo,
+  onRedo,
+  onFind,
+  onReplace,
+  onOpenTheme,
+  onOpenShare,
+  shareDisabled,
   onOpenCompare,
   onOpenShortcuts,
 }: MenuBarProps) {
@@ -55,7 +76,15 @@ export function MenuBar({
         onSave={onSaveFile}
         onSaveAs={onSaveFileAs}
       />
-      <ToolsMenu onRunTool={onRunTool} />
+      <EditMenu
+        getEditState={getEditState}
+        onUndo={onUndo}
+        onRedo={onRedo}
+        onFind={onFind}
+        onReplace={onReplace}
+        onOpenTheme={onOpenTheme}
+      />
+      <ToolsMenu onRunTool={onRunTool} onOpenShare={onOpenShare} shareDisabled={shareDisabled} />
       <button type="button" className="menu-trigger" onClick={onOpenCompare}>
         Compare…
       </button>
