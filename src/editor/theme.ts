@@ -44,8 +44,16 @@ const chromeTheme = EditorView.theme({
     backgroundColor: 'var(--active-line)',
     color: 'var(--muted)',
   },
+  // CodeMirror's own base theme hardcodes a focused-selection color
+  // (`&light.cm-focused > .cm-scroller > .cm-selectionLayer
+  // .cm-selectionBackground { background: #d7d4f0 }` in
+  // @codemirror/view) at higher specificity than a plain
+  // `.cm-selectionBackground` rule, so it silently wins over this token
+  // the moment the editor is focused — `!important` is the standard,
+  // documented way to override it (matching the selector exactly is
+  // fragile against future CodeMirror internal changes).
   '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection': {
-    backgroundColor: 'var(--accent-soft)',
+    backgroundColor: 'var(--accent-soft) !important',
   },
   '.cm-selectionMatch': {
     backgroundColor: 'var(--accent-soft)',

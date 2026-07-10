@@ -389,3 +389,25 @@ Plan: `docs/openpad-feature-02-plan.md`, Part B.
   test. General rule: "port the algorithm" doesn't mean "port a known JS
   anti-pattern along with it" — worth a second look at *how* a reference
   implementation does something, not just *what* it computes.
+- 2026-07-10 — User-reported bug, found live, not in tests: text
+  selection rendered as a fixed lavender (`#d7d4f0`) instead of the
+  active accent color, but only while the editor had focus — unfocused
+  selection was correctly accent-colored, which is what made this
+  confusing to diagnose (single-line test selections looked fine;
+  multi-line ones, checked while the editor stayed focused, didn't).
+  Root cause: `@codemirror/view`'s own base theme hardcodes
+  `&light.cm-focused > .cm-scroller > .cm-selectionLayer
+  .cm-selectionBackground { background: #d7d4f0 }`, at higher CSS
+  specificity (6 class-selector components) than our plain
+  `.cm-selectionBackground` rule (3), so it silently won the moment
+  `.cm-focused` was added — a rule this codebase's own unit tests can't
+  catch, since jsdom doesn't compute real cross-stylesheet CSS
+  specificity. Fixed with `!important` on that one property in
+  `src/editor/theme.ts` (the standard, documented way to override this
+  specific CodeMirror default — matching their selector exactly was
+  considered and rejected as fragile against future CodeMirror internal
+  changes). Confirmed via direct DOM/computed-style inspection in a real
+  browser, not just visual screenshots — the `.cm-selectionBackground`
+  elements' own `background-color` had reported correctly all along;
+  only the *rendered* color was wrong, which a computed-style query
+  catches and a coverage report never would.
