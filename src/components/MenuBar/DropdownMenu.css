@@ -2,6 +2,7 @@
 
 .dropdown-menu-root {
   position: relative;
+  flex-shrink: 0;
 }
 
 .menu-trigger {
@@ -12,7 +13,9 @@
   color: var(--ink);
   font-family: var(--font-mono);
   font-size: 13px;
+  white-space: nowrap;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .menu-trigger:hover {

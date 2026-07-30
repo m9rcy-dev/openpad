@@ -1,7 +1,9 @@
 .menu-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 2px;
+  row-gap: 4px;
   padding: 6px 10px;
   background: var(--chrome);
   border-bottom: 1px solid var(--line);
@@ -17,6 +19,7 @@
   padding-right: 12px;
   margin-right: 6px;
   border-right: 1px solid var(--line);
+  flex-shrink: 0;
 }
 
 .menu-bar-logo {
@@ -34,6 +37,7 @@
 
 .menu-bar-right {
   margin-left: auto;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 8px;
