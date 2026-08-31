@@ -9,10 +9,11 @@
 import { encodeShareContent } from './codec'
 
 /**
- * Same ceiling `shareable-notepad` already validates in production —
- * see `CONFIG.MAX_CHARS` in that app's `app.js`.
+ * Raised 5x from the original 20,000-character ceiling once share links
+ * started being gzip-compressed — see `docs/openpad-feature-03-plan.md`
+ * Part B.
  */
-export const MAX_SHARE_CHARS = 20_000
+export const MAX_SHARE_CHARS = 100_000
 
 /** True when `content` is too long to generate a share link for. */
 export function isOverShareLimit(content: string): boolean {
@@ -21,14 +22,13 @@ export function isOverShareLimit(content: string): boolean {
 
 /**
  * Builds a link back to wherever OpenPad is currently being served from
- * (works unmodified in local dev and on the deployed GitHub Pages
- * `base` path — no hardcoded domain), with `content` encoded into the
- * hash fragment.
+ * (works unmodified in local dev and on the deployed site — no
+ * hardcoded domain), with `content` encoded into the hash fragment.
  *
  * @example
- * buildShareUrl('hello') // 'http://localhost:5173/#aGVsbG8'
+ * await buildShareUrl('hello') // 'http://localhost:5173/#u.aGVsbG8'
  */
-export function buildShareUrl(content: string): string {
+export async function buildShareUrl(content: string): Promise<string> {
   const { origin, pathname } = window.location
-  return `${origin}${pathname}#${encodeShareContent(content)}`
+  return `${origin}${pathname}#${await encodeShareContent(content)}`
 }

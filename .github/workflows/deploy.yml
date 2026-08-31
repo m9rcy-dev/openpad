@@ -1,8 +1,10 @@
 # Deploys the production build to GitHub Pages on every push to main.
 #
 # One-time repository setup: Settings → Pages → Source → "GitHub Actions".
-# The site is served from https://<user>.github.io/<repository-name>/, so
-# the build receives VITE_BASE=/<repository-name>/ (read in vite.config.ts).
+# The site is served from the custom domain openpad.m9rcy.dev (see
+# public/CNAME, copied to dist/CNAME by Vite), so the build runs with no
+# VITE_BASE override — base defaults to '/' (read in vite.config.ts),
+# correct for a domain root rather than a GitHub Pages repo subpath.
 name: Deploy to GitHub Pages
 
 on:
@@ -39,10 +41,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build with Pages base path
+      - name: Build
         run: npm run build
-        env:
-          VITE_BASE: /${{ github.event.repository.name }}/
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

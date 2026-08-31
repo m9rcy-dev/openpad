@@ -20,7 +20,7 @@ import { ShortcutsDialog } from './components/ShortcutsDialog/ShortcutsDialog'
 import { ShareDialog } from './components/MenuBar/ShareDialog'
 import { ThemeDialog } from './components/MenuBar/ThemeDialog'
 import { consumeSharedLink } from './share/importSharedLink'
-import { buildShareUrl, isOverShareLimit, MAX_SHARE_CHARS } from './share/shareLink'
+import { isOverShareLimit, MAX_SHARE_CHARS } from './share/shareLink'
 import { nextUntitledName, selectActiveDocument, useDocumentsStore } from './store/documentsStore'
 import { hydrateDocumentsStore } from './storage/persistence'
 import { useAccentTheme } from './theme/useAccentTheme'
@@ -89,14 +89,17 @@ export default function App() {
   useEffect(() => {
     let cancelled = false
     let stopAutosave: (() => void) | undefined
-    void hydrateDocumentsStore().then((stop) => {
+    void hydrateDocumentsStore().then(async (stop) => {
       if (cancelled) {
         stop()
         return
       }
       stopAutosave = stop
 
-      const shared = consumeSharedLink()
+      const shared = await consumeSharedLink()
+      if (cancelled) {
+        return
+      }
       if (shared !== null) {
         const name = nextUntitledName(useDocumentsStore.getState().documents)
         loadIntoTab(name, shared.content, null)
@@ -333,7 +336,7 @@ export default function App() {
       )}
       {shareDialogOpen && (
         <ShareDialog
-          url={buildShareUrl(activeDocument.content)}
+          content={activeDocument.content}
           onClose={() => setShareDialogOpen(false)}
           onCopyResult={(success) =>
             setNotice(

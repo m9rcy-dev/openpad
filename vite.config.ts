@@ -6,12 +6,15 @@ import { VitePWA } from 'vite-plugin-pwa'
 /**
  * Vite build configuration.
  *
- * `base` controls the public path the app is served from. It defaults to `/`
- * for local development. The GitHub Pages deploy workflow sets `VITE_BASE`
- * to `/<repository-name>/` because project pages are served from a subpath
- * (https://<user>.github.io/<repository-name>/). vite-plugin-pwa reads this
- * same `base` to compute the service worker's scope and start_url, so the
- * PWA installs correctly from a Pages subpath too.
+ * `base` controls the public path the app is served from. It defaults to
+ * `/`, correct for local development and for the deployed site, which is
+ * served from the custom domain openpad.m9rcy.dev (see `public/CNAME`) —
+ * a domain root, not a GitHub Pages repository subpath. `VITE_BASE` stays
+ * available as a build-time override (e.g. for a fork deployed to a plain
+ * `https://<user>.github.io/<repository-name>/` project page instead of a
+ * custom domain, where `base` would need to be `/<repository-name>/`).
+ * vite-plugin-pwa reads this same `base` to compute the service worker's
+ * scope and start_url, so the PWA installs correctly either way.
  */
 export default defineConfig({
   base: process.env.VITE_BASE ?? '/',

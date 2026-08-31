@@ -20,16 +20,18 @@ describe('isOverShareLimit', () => {
 })
 
 describe('buildShareUrl', () => {
-  it('builds a URL from the current origin and pathname with the content in the hash', () => {
-    const url = buildShareUrl('hello')
+  it('builds a URL from the current origin and pathname with the content in the hash', async () => {
+    const url = await buildShareUrl('hello')
     const parsed = new URL(url)
     expect(parsed.origin).toBe(window.location.origin)
     expect(parsed.pathname).toBe(window.location.pathname)
-    expect(parsed.hash).toBe('#aGVsbG8')
+    // 'hello' is short enough that gzip overhead makes it larger, so
+    // encodeShareContent picks the uncompressed 'u.' marker.
+    expect(parsed.hash).toBe('#u.aGVsbG8')
   })
 
-  it('produces an empty hash for empty content', () => {
-    const url = buildShareUrl('')
+  it('produces an empty hash for empty content', async () => {
+    const url = await buildShareUrl('')
     expect(new URL(url).hash).toBe('')
   })
 })
