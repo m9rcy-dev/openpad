@@ -52,7 +52,7 @@ describe('ToolsMenu', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Tools' }))
     const shareItem = screen.getByRole('menuitem', { name: 'Share…' })
     expect(shareItem).toBeDisabled()
-    expect(shareItem).toHaveAttribute('title', expect.stringContaining('20,000'))
+    expect(shareItem).toHaveAttribute('title', expect.stringContaining('100,000'))
   })
 })
 

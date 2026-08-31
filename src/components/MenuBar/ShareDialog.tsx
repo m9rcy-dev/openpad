@@ -5,24 +5,49 @@
  * that blocks editing while open, so there's no in-dialog "too long"
  * state to handle here — see docs/openpad-feature-02-plan.md Part B,
  * Design decision 1.
+ *
+ * The link is built here (not by the caller) because `buildShareUrl` is
+ * async — it gzip-compresses `content` via `CompressionStream` — see
+ * docs/openpad-feature-03-plan.md Part B. While that's in flight, the
+ * field shows a placeholder and Copy is disabled.
  */
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { buildShareUrl } from '../../share/shareLink'
 import './ShareDialog.css'
 
 export interface ShareDialogProps {
-  url: string
+  content: string
   onClose: () => void
   /** Reports whether the clipboard write succeeded, for a status notice. */
   onCopyResult: (success: boolean) => void
 }
 
-export function ShareDialog({ url, onClose, onCopyResult }: ShareDialogProps) {
+export function ShareDialog({ content, onClose, onCopyResult }: ShareDialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const [url, setUrl] = useState<string | null>(null)
 
   useEffect(() => {
+    let cancelled = false
+    void buildShareUrl(content).then((built) => {
+      if (!cancelled) {
+        setUrl(built)
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [content])
+
+  useEffect(() => {
+    if (url === null) {
+      return
+    }
     inputRef.current?.focus()
     inputRef.current?.select()
+  }, [url])
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onClose()
@@ -33,6 +58,9 @@ export function ShareDialog({ url, onClose, onCopyResult }: ShareDialogProps) {
   }, [onClose])
 
   const handleCopy = async () => {
+    if (url === null) {
+      return
+    }
     try {
       await navigator.clipboard.writeText(url)
       onCopyResult(true)
@@ -64,12 +92,17 @@ export function ShareDialog({ url, onClose, onCopyResult }: ShareDialogProps) {
           ref={inputRef}
           type="text"
           className="share-dialog-url"
-          value={url}
+          value={url ?? 'Generating link…'}
           readOnly
           aria-label="Share link"
           onFocus={(event) => event.target.select()}
         />
-        <button type="button" className="share-dialog-copy" onClick={() => void handleCopy()}>
+        <button
+          type="button"
+          className="share-dialog-copy"
+          disabled={url === null}
+          onClick={() => void handleCopy()}
+        >
           Copy link
         </button>
       </div>

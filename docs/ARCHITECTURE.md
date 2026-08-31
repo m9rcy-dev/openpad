@@ -171,17 +171,36 @@ and the first Save behaves like Save As once.
 
 A **Share…** entry in the Tools menu turns the active document into a
 self-contained URL — the same stateless mechanism as the standalone
-`shareable-notepad` project: `codec.ts` encodes text as UTF-8 bytes →
-base64 → URL-safe substitution (`+`/`/`/`=` → `-`/`_`/nothing), so the
-result drops straight into a URL hash fragment with no escaping and no
-server involved. `shareLink.ts` builds the link against
-`window.location.origin`/`pathname` (works unmodified in dev and on the
-deployed GitHub Pages `base` path) and gates whether one can be built at
-all: **length is the only real constraint** (every character becomes
+`shareable-notepad` project, extended with gzip compression
+(`docs/openpad-feature-03-plan.md` Part B). `codec.ts` encodes text as
+UTF-8 bytes, gzips them via the native `CompressionStream('gzip')`, then
+base64url-encodes the result (`+`/`/`/`=` → `-`/`_`/nothing) so it drops
+straight into a URL hash fragment with no escaping and no server
+involved — falling back to uncompressed base64url when compression
+doesn't shrink the input (tiny documents, where gzip's fixed ~18-20 byte
+overhead costs more than it saves) or isn't available in the browser.
+The output carries a marker prefix so decode knows which case it is:
+`z.` (compressed), `u.` (uncompressed), or **no marker at all**, which
+means the original pre-compression format — since that format's
+alphabet (`[A-Za-z0-9\-_]`) can never contain a `.`, links shared before
+compression was added keep decoding correctly forever, with no version
+negotiation needed. Because compression is stream-based, both
+`encodeShareContent`/`decodeShareContent` and everything that calls them
+(`buildShareUrl`, `consumeSharedLink`) are `async`.
+
+`shareLink.ts` builds the link against `window.location.origin`/
+`pathname` (works unmodified in dev and on the deployed site regardless
+of `base` — see "Deployment" below) and gates whether one can be built
+at all: **length is the only real constraint** (every character becomes
 part of a URL-safe alphabet before it touches the URL, so there's no
 "invalid character" case) — `Share…` is disabled, not click-then-warned,
-whenever the active document is over `MAX_SHARE_CHARS` (20,000, the same
-ceiling `shareable-notepad` already validates in production).
+whenever the active document is over `MAX_SHARE_CHARS` (100,000 —
+raised 5x from the original 20,000 once compression made the resulting
+URL far shorter per character of source text). `ShareDialog` owns the
+async URL generation itself (not `App.tsx`, which can't `await` inside
+JSX): it takes the raw `content` string as a prop, calls `buildShareUrl`
+in an effect, and shows a brief "Generating link…" placeholder with Copy
+disabled until it resolves.
 
 Receiving is the mirror image: `importSharedLink.ts` reads and clears
 `window.location.hash` once, right after the documents store finishes
@@ -202,6 +221,19 @@ lazy-loaded diagram-type chunks — that's what lets diagrams still render
 with no network. `registerType: 'prompt'` means updates don't apply
 silently; `src/pwa/UpdatePrompt.tsx` shows a dismissible banner instead,
 so a user mid-edit doesn't get reloaded out from under themselves.
+
+## Deployment
+
+The production build (`.github/workflows/deploy.yml`) publishes to
+GitHub Pages, served from the custom domain `openpad.m9rcy.dev` rather
+than the default `<user>.github.io/openpad/` project-page URL —
+`public/CNAME` (copied verbatim to `dist/CNAME` by Vite) is what tells
+GitHub Pages to serve that domain. Because a custom domain serves from
+the root, the deploy workflow no longer sets `VITE_BASE`, so
+`vite.config.ts`'s `base` defaults to `/`. Both `vite-plugin-pwa`'s
+service-worker scope/`start_url` and `shareLink.ts`'s generated URLs
+derive from this same `base`, so they're correct automatically — no
+separate deploy-target-specific config exists for either.
 
 ## Testing strategy
 

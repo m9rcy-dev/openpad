@@ -18,6 +18,13 @@ thresholds enforced in CI (100% on `src/tools/**`, ~90%+ overall with
 keyboard-shortcuts dialog, and `docs/ARCHITECTURE.md` +
 `docs/CONTRIBUTING.md` + `.github/dependabot.yml` + `LICENSE`.
 
+`docs/openpad-feature-03-plan.md` adds three more, independent pieces:
+a custom domain (`openpad.m9rcy.dev`) for the GitHub Pages deploy, a
+gzip-compressed share-link format (raising the document cap from 20,000
+to 100,000 characters, backward-compatible with links shared under the
+old format), and a CSS fix for mouse-drag text selection not highlighting
+its first row.
+
 Remaining known gaps are the visual-only offline verification noted in
 M8, e2e coverage for M11/M12 (unit/component tests are in place; no
 Playwright cases added yet for the theme picker or share flow), and the
@@ -332,6 +339,29 @@ Plan: `docs/openpad-feature-02-plan.md`, Part B.
   Playwright suite instead, where a real browser's keyboard events work
   correctly. General rule: real-keyboard/real-DOM-dispatch behavior
   belongs in e2e, not jsdom.
+- 2026-08-31 — Added `openpad.m9rcy.dev` as a custom domain on GitHub
+  Pages (`docs/openpad-feature-03-plan.md` Part A): `public/CNAME` +
+  a DNS `CNAME` record + repo Settings → Pages → Custom domain. Since a
+  custom domain serves from the root rather than a `/openpad/` repo
+  subpath, `VITE_BASE` was removed from `deploy.yml` (superseding the
+  2026-07-07 entry above) — `base` now always defaults to `/`.
+- 2026-08-31 — Share links now gzip-compress via native
+  `CompressionStream`/`DecompressionStream` (`docs/openpad-feature-03-plan.md`
+  Part B), no new dependency. Output carries a `z.`/`u.` marker prefix;
+  a hash with no marker is decoded as the original pre-compression
+  format, so links shared before this change keep working forever.
+  `MAX_SHARE_CHARS` raised from 20,000 to 100,000. Compression made
+  `encodeShareContent`/`decodeShareContent` async, which rippled into
+  `buildShareUrl`, `consumeSharedLink`, and `ShareDialog` (moved its URL
+  generation from an `App.tsx`-computed prop to an internal effect,
+  since JSX can't `await`). Hit one non-obvious snag along the way:
+  `new Blob([bytes]).stream()` — the MDN-idiomatic way to turn bytes
+  into a `ReadableStream` for piping through `CompressionStream` —
+  throws under Vitest's jsdom environment (`.stream is not a function`);
+  jsdom's `Blob` polyfill doesn't implement it, even though real
+  browsers and Node both do. Constructing the `ReadableStream` directly
+  (`new ReadableStream({ start(c) { c.enqueue(bytes); c.close() } })`)
+  sidesteps `Blob` entirely and works identically everywhere.
 - 2026-07-08 — Closing the coverage gap on `src/tools/**` surfaced a
   pattern worth keeping: several `?? fallback` / `isNaN` guards were
   provably unreachable given the calling code (e.g. `JSON.parse` only

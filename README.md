@@ -4,8 +4,9 @@ A Notepad++-inspired notepad that runs entirely in your browser. Multi-tab
 editing, text transform tools (Base64, URL, HTML entities, JSON/XML
 format · minify · validate, text utilities), live Markdown / Mermaid /
 PlantUML preview, file compare, offline support — deployable for free
-on GitHub Pages. No server, no account, no data leaves your machine
-(PlantUML rendering excepted; see below).
+on GitHub Pages, live at [openpad.m9rcy.dev](https://openpad.m9rcy.dev).
+No server, no account, no data leaves your machine (PlantUML rendering
+excepted; see below).
 
 > See [PROGRESS.md](PROGRESS.md) for build status and
 > [docs/ui-mockup.html](docs/ui-mockup.html) for the design target.
@@ -36,8 +37,26 @@ npm run dev        # local development at http://localhost:5173
 
 1. Push this repository to GitHub.
 2. Repository **Settings → Pages → Source → "GitHub Actions"**.
-3. Push to `main` — `.github/workflows/deploy.yml` builds with the correct
-   base path (`/<repository-name>/`) and publishes automatically.
+3. Push to `main` — `.github/workflows/deploy.yml` builds and publishes
+   automatically.
+
+### Custom domain
+
+The deployed site is served from `openpad.m9rcy.dev` instead of the
+default `<user>.github.io/openpad/` URL:
+
+1. `public/CNAME` (committed to this repo) contains `openpad.m9rcy.dev` —
+   Vite copies it to `dist/CNAME` on every build, which is what GitHub
+   Pages reads to serve the custom domain.
+2. At the `m9rcy.dev` DNS provider, add a `CNAME` record: `openpad` →
+   `<user>.github.io`.
+3. Repository **Settings → Pages → Custom domain** → enter
+   `openpad.m9rcy.dev` → enable **Enforce HTTPS** once the certificate
+   provisions (GitHub Pages auto-provisions it via Let's Encrypt).
+
+Because the domain serves from the root rather than a `/openpad/`
+subpath, the deploy workflow no longer sets `VITE_BASE` — the build
+defaults to `base: '/'` (see `vite.config.ts`).
 
 ## Documentation
 

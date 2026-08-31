@@ -27,7 +27,7 @@ export interface ConsumedShare {
  * ceiling before a link is ever generated; this exists for a
  * hand-edited or externally-produced hash.
  */
-export function consumeSharedLink(): ConsumedShare | null {
+export async function consumeSharedLink(): Promise<ConsumedShare | null> {
   const hash = window.location.hash.slice(1)
   if (hash === '') {
     return null
@@ -35,7 +35,7 @@ export function consumeSharedLink(): ConsumedShare | null {
 
   window.history.replaceState(null, '', window.location.pathname + window.location.search)
 
-  const decoded = decodeShareContent(hash)
+  const decoded = await decodeShareContent(hash)
   if (decoded === '') {
     return null
   }

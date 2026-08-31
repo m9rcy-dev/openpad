@@ -27,7 +27,7 @@
   --line: #d8dcd4;
   --editor-bg: #fdfdfc;
   --gutter: #f0f2ed;
-  --active-line: #f0f6ef;
+  --active-line: color-mix(in srgb, var(--accent) 6%, transparent);
   --danger: #a03434;
   --danger-soft: #fbe7e7;
 
@@ -53,7 +53,7 @@
     --line: #2e352f;
     --editor-bg: #171c18;
     --gutter: #1b211c;
-    --active-line: #1e2a20;
+    --active-line: color-mix(in srgb, var(--accent) 10%, transparent);
     --danger: #e09a9a;
     --danger-soft: #3a2323;
 
@@ -76,7 +76,7 @@
   --line: #d8dcd4;
   --editor-bg: #fdfdfc;
   --gutter: #f0f2ed;
-  --active-line: #f0f6ef;
+  --active-line: color-mix(in srgb, var(--accent) 6%, transparent);
   --danger: #a03434;
   --danger-soft: #fbe7e7;
 
@@ -98,7 +98,7 @@
   --line: #2e352f;
   --editor-bg: #171c18;
   --gutter: #1b211c;
-  --active-line: #1e2a20;
+  --active-line: color-mix(in srgb, var(--accent) 10%, transparent);
   --danger: #e09a9a;
   --danger-soft: #3a2323;
 
